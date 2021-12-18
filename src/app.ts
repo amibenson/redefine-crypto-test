@@ -77,8 +77,8 @@ const findBlockHeight = async (timestampToFind: Timestamp) => {
       timestampToFind
     )}`
   );
-  if (timestampToFind < GENESIS_BLOCK_TS) {
-    throw new Error(`timestampToFind is prior to genesis block`);
+  if (timestampToFind <= GENESIS_BLOCK_TS) {
+    throw new Error(`timestampToFind is prior/equal to genesis block`);
   }
 
   const latestBlockHeight: BlockHeight = await getLatestBlockHeight();
@@ -86,7 +86,7 @@ const findBlockHeight = async (timestampToFind: Timestamp) => {
     latestBlockHeight
   );
 
-  if (timestampToFind > timestampLatestBlock) {
+  if (timestampToFind >= timestampLatestBlock) {
     throw new Error(`timestampToFind is later than latest block's ts`);
   }
 
@@ -97,11 +97,11 @@ const findBlockHeight = async (timestampToFind: Timestamp) => {
   );
 
   console.log(
-    `${await prepareRangeForSearch(timestampToFind, estimatedHeight)}`
+    `${await findBlockMatchingTimestamp(timestampToFind, estimatedHeight)}`
   );
 };
 
-const prepareRangeForSearch = async (
+const findBlockMatchingTimestamp = async (
   timestampToFind: Timestamp,
   maxBlockHeight: BlockHeight
 ): Promise<BlockHeight> => {
@@ -124,16 +124,13 @@ const prepareRangeForSearch = async (
       maxBlockHeight -
       (daysDiffEstimateVsDestination + 1) * ESTIMATED_BITCOIN_BLOCKS_IN_1_DAY;
   }
-
+  //
+  // e.g:
+  //
   // findBlockHeight(timestampToFind = 1637430034) - aka: 2021-11-20T17:40:34.000Z
   // maxBlockHeight: 710678 = 2021-11-21T09:27:50.000Z
   // minBlockHeight: 710534 = 2021-11-20T08:39:58.000Z
-
-  // -- OR --
-
-  // findBlockHeight(timestampToFind = 1232103989) - aka: 2009-01-16T11:06:29.000Z
-  // maxBlockHeight: 1728 = 2009-01-25T06:10:43.000Z
-  // minBlockHeight: 432 = 2009-01-14T08:54:37.000Z
+  //
   let pivotMiddleHeight: BlockHeight | undefined;
   let pivotTs: Timestamp | undefined;
   while (maxBlockHeight - minBlockHeight > 1) {
